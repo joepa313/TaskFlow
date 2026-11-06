@@ -1,0 +1,171 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TaskFlow - Task Manager</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <h1>TaskFlow</h1>
+
+            <nav>
+                <button class="nav-btn active" data-filter="all">
+                    All Tasks
+                </button>
+
+                <button class="nav-btn" data-filter="pending">
+                    Pending
+                </button>
+
+                <button class="nav-btn" data-filter="completed">
+                    Completed
+                </button>
+            </nav>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header>
+                <h2>My Tasks</h2>
+                <p>Stay organized and get things done.</p>
+            </header>
+
+
+            <!-- Dashboard -->
+            <section class="dashboard">
+
+                <div class="stat-card">
+                    <h3 id="total-count">0</h3>
+                    <p>Total Tasks</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3 id="pending-count">0</h3>
+                    <p>Pending</p>
+                </div>
+
+                <div class="stat-card">
+                    <h3 id="completed-count">0</h3>
+                    <p>Completed</p>
+                </div>
+
+            </section>
+
+
+            <!-- Add Task Form -->
+            <section class="task-form">
+
+                <h3>Add a New Task</h3>
+
+                <form id="task-form">
+
+                    <input
+                        type="text"
+                        id="task-title"
+                        placeholder="What needs to get done?"
+                        required
+                    >
+
+                    <input
+                        type="text"
+                        id="task-description"
+                        placeholder="Add a description (optional)"
+                    >
+
+
+                    <div class="form-options">
+
+                        <select id="task-priority">
+                            <option value="Low">
+                                Low Priority
+                            </option>
+
+                            <option value="Medium" selected>
+                                Medium Priority
+                            </option>
+
+                            <option value="High">
+                                High Priority
+                            </option>
+                        </select>
+
+
+                        <select id="task-category">
+                            <option value="Personal">
+                                Personal
+                            </option>
+
+                            <option value="Work">
+                                Work
+                            </option>
+
+                            <option value="School">
+                                School
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+                        </select>
+
+
+                        <input
+                            type="date"
+                            id="task-date"
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="add-btn"
+                    >
+                        + Add Task
+                    </button>
+
+                </form>
+
+            </section>
+
+
+            <!-- Task List -->
+            <section class="tasks-section">
+
+                <h3>My Task List</h3>
+
+                <input
+                    type="text"
+                    id="task-search"
+                    placeholder="Search your tasks..."
+                >
+
+                <div id="task-list"></div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+```
