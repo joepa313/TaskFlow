@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,42 +87,20 @@
                         placeholder="Add a description (optional)"
                     >
 
-
                     <div class="form-options">
 
                         <select id="task-priority">
-                            <option value="Low">
-                                Low Priority
-                            </option>
-
-                            <option value="Medium" selected>
-                                Medium Priority
-                            </option>
-
-                            <option value="High">
-                                High Priority
-                            </option>
+                            <option value="Low">Low Priority</option>
+                            <option value="Medium" selected>Medium Priority</option>
+                            <option value="High">High Priority</option>
                         </select>
-
 
                         <select id="task-category">
-                            <option value="Personal">
-                                Personal
-                            </option>
-
-                            <option value="Work">
-                                Work
-                            </option>
-
-                            <option value="School">
-                                School
-                            </option>
-
-                            <option value="Other">
-                                Other
-                            </option>
+                            <option value="Personal">Personal</option>
+                            <option value="Work">Work</option>
+                            <option value="School">School</option>
+                            <option value="Other">Other</option>
                         </select>
-
 
                         <input
                             type="date"
@@ -131,11 +109,7 @@
 
                     </div>
 
-
-                    <button
-                        type="submit"
-                        class="add-btn"
-                    >
+                    <button type="submit" class="add-btn">
                         + Add Task
                     </button>
 
@@ -164,8 +138,147 @@
     </div>
 
 
+    <!-- EDIT TASK MODAL -->
+    <dialog id="edit-modal" class="edit-modal">
+
+        <div class="modal-header">
+
+            <div>
+                <h2>Edit Task</h2>
+                <p>Update your task details below.</p>
+            </div>
+
+            <button
+                type="button"
+                id="close-modal"
+                class="close-modal"
+                aria-label="Close"
+            >
+                &times;
+            </button>
+
+        </div>
+
+
+        <form id="edit-task-form">
+
+            <div class="edit-field">
+
+                <label for="edit-title">Task Name</label>
+
+                <input
+                    type="text"
+                    id="edit-title"
+                    required
+                >
+
+            </div>
+
+
+            <div class="edit-field">
+
+                <label for="edit-description">Description</label>
+
+                <textarea
+                    id="edit-description"
+                    rows="3"
+                    placeholder="Add a description..."
+                ></textarea>
+
+            </div>
+
+
+            <!-- Priority Selection -->
+            <div class="edit-field">
+
+                <label>Priority</label>
+
+                <div class="selection-group" id="edit-priority">
+
+                    <button type="button" class="choice-btn priority-choice" data-value="High">
+                        High
+                    </button>
+
+                    <button type="button" class="choice-btn priority-choice" data-value="Medium">
+                        Medium
+                    </button>
+
+                    <button type="button" class="choice-btn priority-choice" data-value="Low">
+                        Low
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Category Selection -->
+            <div class="edit-field">
+
+                <label>Category</label>
+
+                <div class="selection-group" id="edit-category">
+
+                    <button type="button" class="choice-btn category-choice" data-value="Personal">
+                        Personal
+                    </button>
+
+                    <button type="button" class="choice-btn category-choice" data-value="Work">
+                        Work
+                    </button>
+
+                    <button type="button" class="choice-btn category-choice" data-value="School">
+                        School
+                    </button>
+
+                    <button type="button" class="choice-btn category-choice" data-value="Other">
+                        Other
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Due Date -->
+            <div class="edit-field">
+
+                <label for="edit-date">Due Date</label>
+
+                <input
+                    type="date"
+                    id="edit-date"
+                >
+
+            </div>
+
+
+            <!-- Modal Buttons -->
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="cancel-edit"
+                    class="cancel-btn"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
     <script src="script.js"></script>
 
 </body>
 </html>
-```

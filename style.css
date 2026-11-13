@@ -1,3 +1,4 @@
+
 /* =========================
    GENERAL STYLING
 ========================= */
@@ -29,6 +30,7 @@ body {
     background-color: #222b45;
     color: white;
     padding: 30px 20px;
+    flex-shrink: 0;
 }
 
 .sidebar h1 {
@@ -114,7 +116,7 @@ header p {
 
 
 /* =========================
-   TASK FORM
+   ADD TASK FORM
 ========================= */
 
 .task-form {
@@ -137,15 +139,18 @@ header p {
 }
 
 input,
-select {
+select,
+textarea {
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
+    font-family: inherit;
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
     outline: none;
     border-color: #5b63d3;
 }
@@ -203,6 +208,7 @@ select:focus {
 
 .task-info {
     flex: 1;
+    min-width: 0;
 }
 
 .task-info h4 {
@@ -230,7 +236,7 @@ select:focus {
 
 
 /* =========================
-   COMPLETE BUTTON
+   TASK BUTTONS
 ========================= */
 
 .complete-btn {
@@ -242,11 +248,6 @@ select:focus {
     background: #bfeccd;
 }
 
-
-/* =========================
-   EDIT BUTTON
-========================= */
-
 .edit-btn {
     background: #e3e7ff;
     color: #454eb5;
@@ -255,11 +256,6 @@ select:focus {
 .edit-btn:hover {
     background: #cbd2ff;
 }
-
-
-/* =========================
-   DELETE BUTTON
-========================= */
 
 .delete-btn {
     background: #ffe0e0;
@@ -333,6 +329,186 @@ select:focus {
 
 
 /* =========================
+   EDIT TASK MODAL
+========================= */
+
+.edit-modal {
+    width: 90%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: auto;
+    padding: 28px;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.edit-modal::backdrop {
+    background: rgba(20, 28, 45, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.modal-header h2 {
+    font-size: 23px;
+    margin-bottom: 6px;
+}
+
+.modal-header p {
+    color: #777;
+    font-size: 14px;
+}
+
+.close-modal {
+    border: none;
+    background: none;
+    font-size: 28px;
+    color: #777;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+#edit-task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.edit-field label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.edit-field input,
+.edit-field textarea {
+    width: 100%;
+}
+
+.edit-field textarea {
+    resize: vertical;
+}
+
+
+/* =========================
+   SELECTION BUTTONS
+========================= */
+
+.selection-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.choice-btn {
+    flex: 1;
+    min-width: 85px;
+    padding: 11px 12px;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    background: white;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.choice-btn:hover {
+    border-color: #5b63d3;
+    background: #f4f4ff;
+}
+
+
+/* Priority selection */
+
+.priority-choice.selected[data-value="High"] {
+    background: #ffe0e0;
+    border-color: #c0392b;
+    color: #c0392b;
+    font-weight: bold;
+}
+
+.priority-choice.selected[data-value="Medium"] {
+    background: #fff0c2;
+    border-color: #d39b16;
+    color: #946200;
+    font-weight: bold;
+}
+
+.priority-choice.selected[data-value="Low"] {
+    background: #d9f5e3;
+    border-color: #207744;
+    color: #207744;
+    font-weight: bold;
+}
+
+
+/* Category selection */
+
+.category-choice.selected {
+    background: #e3e7ff;
+    border-color: #5b63d3;
+    color: #454eb5;
+    font-weight: bold;
+}
+
+
+/* =========================
+   MODAL ACTION BUTTONS
+========================= */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.cancel-btn,
+.save-btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    background: #eee;
+    color: #555;
+}
+
+.cancel-btn:hover {
+    background: #ddd;
+}
+
+.save-btn {
+    background: #5b63d3;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #464eb5;
+}
+
+
+/* =========================
    MOBILE DESIGN
 ========================= */
 
@@ -370,5 +546,21 @@ select:focus {
 
     .task-actions {
         width: 100%;
+    }
+
+    .task-actions button {
+        flex: 1;
+    }
+
+    .edit-modal {
+        padding: 22px;
+    }
+
+    .selection-group {
+        gap: 7px;
+    }
+
+    .choice-btn {
+        min-width: 75px;
     }
 }
