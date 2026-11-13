@@ -1,54 +1,326 @@
+// =========================
+// SUPABASE CONNECTION
+// =========================
+
+const SUPABASE_URL = "https://ptudugkkmhmlpdedfshg.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable__YtpYT9dO2eppvuZ9n6Ibg_WZo_05Om";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
 
 // =========================
-// TASKFLOW APPLICATION
+// APPLICATION VARIABLES
 // =========================
 
-
-// Load saved tasks from localStorage
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-
-// Track the current filter
+let tasks = [];
 let currentFilter = "all";
-
-// Track which task is being edited
 let editingTaskId = null;
-
-// Selected editing options
-let selectedPriority = "Medium";
-let selectedCategory = "Personal";
+let authMode = "login";
 
 
 // =========================
 // GET HTML ELEMENTS
 // =========================
 
+const authScreen = document.getElementById("auth-screen");
+const app = document.getElementById("app");
+
+const authForm = document.getElementById("auth-form");
+const authEmail = document.getElementById("auth-email");
+const authPassword = document.getElementById("auth-password");
+const authSubmit = document.getElementById("auth-submit");
+const authMessage = document.getElementById("auth-message");
+
+const loginTab = document.getElementById("login-tab");
+const signupTab = document.getElementById("signup-tab");
+const forgotPassword = document.getElementById("forgot-password");
+
+const accountEmail = document.getElementById("account-email");
+const logoutBtn = document.getElementById("logout-btn");
+
 const taskForm = document.getElementById("task-form");
 const taskList = document.getElementById("task-list");
-const taskSearch = document.getElementById("task-search");
+const searchInput = document.getElementById("search-input");
 
-const totalCount = document.getElementById("total-count");
-const pendingCount = document.getElementById("pending-count");
-const completedCount = document.getElementById("completed-count");
+const totalTasks = document.getElementById("total-tasks");
+const pendingTasks = document.getElementById("pending-tasks");
+const completedTasks = document.getElementById("completed-tasks");
 
-// Edit modal elements
 const editModal = document.getElementById("edit-modal");
-const editTaskForm = document.getElementById("edit-task-form");
-
-const editTitle = document.getElementById("edit-title");
-const editDescription = document.getElementById("edit-description");
-const editDate = document.getElementById("edit-date");
-
-const closeModalButton = document.getElementById("close-modal");
-const cancelEditButton = document.getElementById("cancel-edit");
+const editForm = document.getElementById("edit-form");
+const closeModal = document.getElementById("close-modal");
 
 
 // =========================
-// SAVE TASKS
+// HELPER FUNCTIONS
 // =========================
 
-function saveTasks() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+function showMessage(message, isError = false) {
+    authMessage.textContent = message;
+    authMessage.style.color = isError ? "#dc2626" : "#16a34a";
 }
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => {
+        const replacements = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        };
+
+        return replacements[character];
+    });
+}
+
+
+// =========================
+// AUTHENTICATION TABS
+// =========================
+
+loginTab.addEventListener("click", () => {
+    authMode = "login";
+
+    loginTab.classList.add("active");
+    signupTab.classList.remove("active");
+
+    authSubmit.textContent = "Login";
+    forgotPassword.style.display = "inline";
+    showMessage("");
+});
+
+signupTab.addEventListener("click", () => {
+    authMode = "signup";
+
+    signupTab.classList.add("active");
+    loginTab.classList.remove("active");
+
+    authSubmit.textContent = "Create Account";
+    forgotPassword.style.display = "none";
+    showMessage("");
+});
+
+
+// =========================
+// CREATE ACCOUNT AND LOGIN
+// =========================
+
+authForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+
+    authSubmit.disabled = true;
+    showMessage("Please wait...");
+
+    try {
+        if (authMode === "signup") {
+
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    emailRedirectTo: window.location.href.split("#")[0]
+                }
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            if (data.session) {
+                showMessage("Account created successfully!");
+            } else {
+                showMessage(
+                    "Account created! Check your email to confirm your account."
+                );
+            }
+
+        } else {
+
+            const { error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            showMessage("Login successful!");
+
+        }
+
+    } catch (error) {
+        showMessage(error.message, true);
+    }
+
+    authSubmit.disabled = false;
+});
+
+
+// =========================
+// FORGOT PASSWORD
+// =========================
+
+forgotPassword.addEventListener("click", async () => {
+
+    const email = authEmail.value.trim();
+
+    if (!email) {
+        showMessage("Enter your email address first.", true);
+        return;
+    }
+
+    showMessage("Sending password reset email...");
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(
+        email,
+        {
+            redirectTo: window.location.href.split("#")[0]
+        }
+    );
+
+    if (error) {
+        showMessage(error.message, true);
+    } else {
+        showMessage("Check your email for the password reset link.");
+    }
+});
+
+
+// =========================
+// LOG OUT
+// =========================
+
+logoutBtn.addEventListener("click", async () => {
+
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        alert(error.message);
+    }
+
+});
+
+
+// =========================
+// AUTHENTICATION STATE
+// =========================
+
+async function handleAuthSession(session) {
+
+    if (session) {
+
+        authScreen.hidden = true;
+        app.hidden = false;
+
+        accountEmail.textContent = session.user.email;
+
+        await loadTasks();
+
+    } else {
+
+        authScreen.hidden = false;
+        app.hidden = true;
+
+        tasks = [];
+        renderTasks();
+        updateDashboard();
+
+    }
+}
+
+
+// =========================
+// LOAD TASKS FROM SUPABASE
+// =========================
+
+async function loadTasks() {
+
+    taskList.innerHTML = '<p class="empty-message">Loading tasks...</p>';
+
+    const { data, error } = await supabaseClient
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        taskList.innerHTML =
+            '<p class="empty-message">Could not load tasks: ' +
+            escapeHTML(error.message) +
+            '</p>';
+
+        return;
+    }
+
+    tasks = data.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description || "",
+        priority: task.priority || "Medium",
+        category: task.category || "Personal",
+        date: task.due_date || "",
+        completed: task.completed || false
+    }));
+
+    renderTasks();
+    updateDashboard();
+}
+
+
+// =========================
+// ADD A NEW TASK
+// =========================
+
+taskForm.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    const newTask = {
+        title: document.getElementById("task-title").value.trim(),
+        description: document.getElementById("task-description").value.trim(),
+        priority: document.getElementById("task-priority").value,
+        category: document.getElementById("task-category").value,
+        due_date: document.getElementById("task-date").value || null,
+        completed: false
+    };
+
+    if (!newTask.title) {
+        return;
+    }
+
+    const addButton = taskForm.querySelector("button[type='submit']");
+    addButton.disabled = true;
+    addButton.textContent = "Adding...";
+
+    const { error } = await supabaseClient
+        .from("tasks")
+        .insert([newTask]);
+
+    addButton.disabled = false;
+    addButton.textContent = "Add Task";
+
+    if (error) {
+        alert("Could not add task: " + error.message);
+        return;
+    }
+
+    taskForm.reset();
+
+    document.getElementById("task-priority").value = "Medium";
+    document.getElementById("task-category").value = "Personal";
+
+    await loadTasks();
+
+});
 
 
 // =========================
@@ -57,15 +329,13 @@ function saveTasks() {
 
 function updateDashboard() {
 
-    totalCount.textContent = tasks.length;
+    const completed = tasks.filter(task => task.completed).length;
+    const pending = tasks.length - completed;
 
-    pendingCount.textContent = tasks.filter(
-        task => !task.completed
-    ).length;
+    totalTasks.textContent = tasks.length;
+    pendingTasks.textContent = pending;
+    completedTasks.textContent = completed;
 
-    completedCount.textContent = tasks.filter(
-        task => task.completed
-    ).length;
 }
 
 
@@ -73,338 +343,211 @@ function updateDashboard() {
 // DISPLAY TASKS
 // =========================
 
-function displayTasks() {
+function renderTasks() {
 
-    // Clear the task list
     taskList.innerHTML = "";
 
-    // Get the search text
-    const searchTerm = taskSearch.value.toLowerCase().trim();
+    let filteredTasks = [...tasks];
 
-    // Filter tasks
-    const filteredTasks = tasks.filter(task => {
-
-        // Filter by completion status
-        if (currentFilter === "pending" && task.completed) {
-            return false;
-        }
-
-        if (currentFilter === "completed" && !task.completed) {
-            return false;
-        }
-
-        // Filter by search text
-        const searchableText = `
-            ${task.title}
-            ${task.description || ""}
-            ${task.category || ""}
-            ${task.priority || ""}
-        `.toLowerCase();
-
-        return searchableText.includes(searchTerm);
-    });
-
-
-    // Show a message if there are no tasks
-    if (filteredTasks.length === 0) {
-
-        const message = document.createElement("p");
-
-        if (tasks.length === 0) {
-            message.textContent = "No tasks yet. Add your first task above!";
-        } else {
-            message.textContent = "No matching tasks found.";
-        }
-
-        message.style.color = "#777";
-        taskList.appendChild(message);
+    if (currentFilter === "pending") {
+        filteredTasks = filteredTasks.filter(task => !task.completed);
     }
 
+    if (currentFilter === "completed") {
+        filteredTasks = filteredTasks.filter(task => task.completed);
+    }
 
-    // Create a card for each task
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    if (searchTerm) {
+        filteredTasks = filteredTasks.filter(task =>
+            task.title.toLowerCase().includes(searchTerm) ||
+            task.description.toLowerCase().includes(searchTerm) ||
+            task.category.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    if (filteredTasks.length === 0) {
+        taskList.innerHTML =
+            '<p class="empty-message">No tasks found.</p>';
+
+        return;
+    }
+
     filteredTasks.forEach(task => {
 
-        // Create task card
-        const card = document.createElement("div");
-        card.className = "task-card";
+        const taskCard = document.createElement("div");
+
+        taskCard.className = "task-card";
 
         if (task.completed) {
-            card.classList.add("completed-task");
+            taskCard.classList.add("completed");
         }
 
+        const priorityClass = task.priority.toLowerCase();
 
-        // Create task information section
-        const info = document.createElement("div");
-        info.className = "task-info";
+        const formattedDate = task.date
+            ? new Date(task.date + "T00:00:00").toLocaleDateString()
+            : "No due date";
 
+        taskCard.innerHTML = `
+            <div class="task-info">
 
-        // Task title
-        const title = document.createElement("h4");
-        title.textContent = task.title;
+                <h3 class="task-title">
+                    ${escapeHTML(task.title)}
+                </h3>
 
+                <p class="task-description">
+                    ${escapeHTML(task.description)}
+                </p>
 
-        // Task description
-        const description = document.createElement("p");
-        description.textContent =
-            task.description || "No description";
+                <div class="task-details">
 
+                    <span class="priority ${escapeHTML(priorityClass)}">
+                        ${escapeHTML(task.priority)}
+                    </span>
 
-        // Task details
-        const details = document.createElement("p");
+                    <span class="category">
+                        ${escapeHTML(task.category)}
+                    </span>
 
-        details.textContent =
-            `Category: ${task.category || "Personal"}` +
-            (task.date ? ` | Due: ${task.date}` : "");
+                    <span class="due-date">
+                        ${escapeHTML(formattedDate)}
+                    </span>
 
+                </div>
+            </div>
 
-        // Priority badge
-        const priorityBadge = document.createElement("span");
+            <div class="task-actions">
 
-        const priority = task.priority || "Medium";
+                <button class="complete-btn">
+                    ${task.completed ? "Undo" : "Complete"}
+                </button>
 
-        priorityBadge.className =
-            `priority-badge priority-${priority.toLowerCase()}`;
+                <button class="edit-btn">
+                    Edit
+                </button>
 
-        priorityBadge.textContent =
-            `${priority} Priority`;
+                <button class="delete-btn">
+                    Delete
+                </button>
 
+            </div>
+        `;
 
-        // Add information to task card
-        info.appendChild(title);
-        info.appendChild(description);
-        info.appendChild(details);
-        info.appendChild(priorityBadge);
+        const completeButton = taskCard.querySelector(".complete-btn");
+        const editButton = taskCard.querySelector(".edit-btn");
+        const deleteButton = taskCard.querySelector(".delete-btn");
 
+        completeButton.addEventListener("click", () => {
+            toggleTask(task.id, task.completed);
+        });
 
-        // =========================
-        // TASK BUTTONS
-        // =========================
+        editButton.addEventListener("click", () => {
+            openEditModal(task.id);
+        });
 
-        const actions = document.createElement("div");
-        actions.className = "task-actions";
+        deleteButton.addEventListener("click", () => {
+            deleteTask(task.id);
+        });
 
-
-        // Complete button
-        const completeButton = document.createElement("button");
-
-        completeButton.className = "complete-btn";
-        completeButton.dataset.action = "complete";
-        completeButton.dataset.id = task.id;
-
-        completeButton.textContent =
-            task.completed ? "Undo" : "Complete";
-
-
-        // Edit button
-        const editButton = document.createElement("button");
-
-        editButton.className = "edit-btn";
-        editButton.dataset.action = "edit";
-        editButton.dataset.id = task.id;
-        editButton.textContent = "Edit";
-
-
-        // Delete button
-        const deleteButton = document.createElement("button");
-
-        deleteButton.className = "delete-btn";
-        deleteButton.dataset.action = "delete";
-        deleteButton.dataset.id = task.id;
-        deleteButton.textContent = "Delete";
-
-
-        // Add buttons
-        actions.appendChild(completeButton);
-        actions.appendChild(editButton);
-        actions.appendChild(deleteButton);
-
-
-        // Add everything to the card
-        card.appendChild(info);
-        card.appendChild(actions);
-
-        // Add the card to the page
-        taskList.appendChild(card);
+        taskList.appendChild(taskCard);
 
     });
 
-
-    // Update dashboard statistics
-    updateDashboard();
 }
 
 
 // =========================
-// ADD NEW TASK
+// COMPLETE OR UNDO TASK
 // =========================
 
-taskForm.addEventListener("submit", function(event) {
+async function toggleTask(id, currentStatus) {
 
-    event.preventDefault();
+    const { error } = await supabaseClient
+        .from("tasks")
+        .update({
+            completed: !currentStatus
+        })
+        .eq("id", id);
 
-    // Get form values
-    const title = document
-        .getElementById("task-title")
-        .value
-        .trim();
-
-    const description = document
-        .getElementById("task-description")
-        .value
-        .trim();
-
-    const priority = document
-        .getElementById("task-priority")
-        .value;
-
-    const category = document
-        .getElementById("task-category")
-        .value;
-
-    const date = document
-        .getElementById("task-date")
-        .value;
-
-
-    // Stop if the title is empty
-    if (!title) {
+    if (error) {
+        alert("Could not update task: " + error.message);
         return;
     }
 
+    await loadTasks();
 
-    // Create a new task
-    const newTask = {
-        id: Date.now().toString(),
-        title: title,
-        description: description,
-        priority: priority,
-        category: category,
-        date: date,
-        completed: false
-    };
-
-
-    // Add task to the array
-    tasks.push(newTask);
-
-
-    // Save and display
-    saveTasks();
-    displayTasks();
-
-
-    // Clear the form
-    taskForm.reset();
-
-});
+}
 
 
 // =========================
-// OPEN EDIT TASK WINDOW
+// DELETE TASK
 // =========================
 
-function openEditModal(taskId) {
+async function deleteTask(id) {
 
-    // Find the selected task
-    const task = tasks.find(
-        task => task.id === taskId
-    );
+    const confirmed = confirm("Are you sure you want to delete this task?");
+
+    if (!confirmed) {
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("tasks")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        alert("Could not delete task: " + error.message);
+        return;
+    }
+
+    await loadTasks();
+
+}
+
+
+// =========================
+// OPEN EDIT WINDOW
+// =========================
+
+function openEditModal(id) {
+
+    const task = tasks.find(task => task.id === id);
 
     if (!task) {
         return;
     }
 
-    // Remember which task is being edited
-    editingTaskId = taskId;
+    editingTaskId = id;
 
+    document.getElementById("edit-title").value = task.title;
+    document.getElementById("edit-description").value = task.description;
+    document.getElementById("edit-date").value = task.date;
+    document.getElementById("edit-priority").value = task.priority;
+    document.getElementById("edit-category").value = task.category;
 
-    // Fill in existing task information
-    editTitle.value = task.title;
-    editDescription.value = task.description || "";
-    editDate.value = task.date || "";
-
-
-    // Set the existing priority and category
-    selectedPriority = task.priority || "Medium";
-    selectedCategory = task.category || "Personal";
-
-
-    // Update selection buttons
-    updateSelectionButtons("edit-priority", selectedPriority);
-    updateSelectionButtons("edit-category", selectedCategory);
-
-
-    // Open the editing window
-    editModal.showModal();
+    editModal.classList.add("show");
 
 }
 
 
 // =========================
-// UPDATE SELECTION BUTTONS
+// CLOSE EDIT WINDOW
 // =========================
 
-function updateSelectionButtons(groupId, selectedValue) {
+closeModal.addEventListener("click", () => {
+    editModal.classList.remove("show");
+    editingTaskId = null;
+});
 
-    const group = document.getElementById(groupId);
+editModal.addEventListener("click", event => {
 
-    const buttons = group.querySelectorAll(".choice-btn");
-
-    buttons.forEach(button => {
-
-        const isSelected = button.dataset.value === selectedValue;
-
-        button.classList.toggle("selected", isSelected);
-
-        button.setAttribute("aria-pressed", isSelected);
-
-    });
-
-}
-
-
-// =========================
-// PRIORITY AND CATEGORY BUTTONS
-// =========================
-
-document.querySelectorAll(".selection-group").forEach(group => {
-
-    group.addEventListener("click", function(event) {
-
-        const button = event.target.closest(".choice-btn");
-
-        if (!button) {
-            return;
-        }
-
-        const selectedValue = button.dataset.value;
-
-        // Update selected priority
-        if (group.id === "edit-priority") {
-
-            selectedPriority = selectedValue;
-
-            updateSelectionButtons(
-                "edit-priority",
-                selectedPriority
-            );
-
-        }
-
-
-        // Update selected category
-        if (group.id === "edit-category") {
-
-            selectedCategory = selectedValue;
-
-            updateSelectionButtons(
-                "edit-category",
-                selectedCategory
-            );
-
-        }
-
-    });
+    if (event.target === editModal) {
+        editModal.classList.remove("show");
+        editingTaskId = null;
+    }
 
 });
 
@@ -413,200 +556,95 @@ document.querySelectorAll(".selection-group").forEach(group => {
 // SAVE EDITED TASK
 // =========================
 
-editTaskForm.addEventListener("submit", function(event) {
+editForm.addEventListener("submit", async event => {
 
     event.preventDefault();
 
-    // Find the task being edited
-    const task = tasks.find(
-        task => task.id === editingTaskId
-    );
-
-    if (!task) {
+    if (!editingTaskId) {
         return;
     }
 
+    const updatedTask = {
+        title: document.getElementById("edit-title").value.trim(),
+        description: document.getElementById("edit-description").value.trim(),
+        due_date: document.getElementById("edit-date").value || null,
+        priority: document.getElementById("edit-priority").value,
+        category: document.getElementById("edit-category").value
+    };
 
-    // Get updated values
-    const title = editTitle.value.trim();
+    const { error } = await supabaseClient
+        .from("tasks")
+        .update(updatedTask)
+        .eq("id", editingTaskId);
 
-    const description = editDescription.value.trim();
-
-    const date = editDate.value;
-
-
-    // Validate title
-    if (!title) {
-        alert("Task title cannot be empty.");
+    if (error) {
+        alert("Could not save changes: " + error.message);
         return;
     }
 
-
-    // Update task information
-    task.title = title;
-    task.description = description;
-    task.priority = selectedPriority;
-    task.category = selectedCategory;
-    task.date = date;
-
-
-    // Save changes
-    saveTasks();
-
-
-    // Close editing window
-    editModal.close();
-
+    editModal.classList.remove("show");
     editingTaskId = null;
 
-
-    // Refresh task list
-    displayTasks();
+    await loadTasks();
 
 });
 
 
 // =========================
-// CLOSE EDIT WINDOW
+// TASK FILTERS
 // =========================
 
-function closeEditModal() {
+document.querySelectorAll(".filter-btn").forEach(button => {
 
-    editModal.close();
+    button.addEventListener("click", () => {
 
-    editingTaskId = null;
-
-}
-
-closeModalButton.addEventListener("click", closeEditModal);
-
-cancelEditButton.addEventListener("click", closeEditModal);
-
-
-// =========================
-// COMPLETE / EDIT / DELETE
-// =========================
-
-taskList.addEventListener("click", function(event) {
-
-    const button = event.target.closest("button");
-
-    // Stop if something other than a button was clicked
-    if (!button) {
-        return;
-    }
-
-    const taskId = button.dataset.id;
-    const action = button.dataset.action;
-
-
-    // =========================
-    // EDIT TASK
-    // =========================
-
-    if (action === "edit") {
-
-        openEditModal(taskId);
-
-        return;
-    }
-
-
-    // =========================
-    // COMPLETE / UNDO TASK
-    // =========================
-
-    if (action === "complete") {
-
-        tasks = tasks.map(task => {
-
-            if (task.id === taskId) {
-
-                return {
-                    ...task,
-                    completed: !task.completed
-                };
-
-            }
-
-            return task;
-
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.classList.remove("active");
         });
 
-    }
+        button.classList.add("active");
 
+        currentFilter = button.dataset.filter;
 
-    // =========================
-    // DELETE TASK
-    // =========================
-
-    if (action === "delete") {
-
-        const confirmed = confirm(
-            "Are you sure you want to delete this task?"
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        tasks = tasks.filter(
-            task => task.id !== taskId
-        );
-
-    }
-
-
-    // Save changes and refresh
-    saveTasks();
-    displayTasks();
-
-});
-
-
-// =========================
-// SIDEBAR FILTERS
-// =========================
-
-document
-    .querySelectorAll(".nav-btn")
-    .forEach(button => {
-
-        button.addEventListener("click", function() {
-
-            // Change filter
-            currentFilter = this.dataset.filter;
-
-
-            // Remove active class from all buttons
-            document
-                .querySelectorAll(".nav-btn")
-                .forEach(btn => {
-                    btn.classList.remove("active");
-                });
-
-
-            // Add active class to selected button
-            this.classList.add("active");
-
-
-            // Refresh tasks
-            displayTasks();
-
-        });
+        renderTasks();
 
     });
+
+});
 
 
 // =========================
 // SEARCH TASKS
 // =========================
 
-taskSearch.addEventListener("input", displayTasks);
+searchInput.addEventListener("input", () => {
+    renderTasks();
+});
 
 
 // =========================
-// LOAD APPLICATION
+// START APPLICATION
 // =========================
 
-displayTasks();
+async function initializeApp() {
+
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+        showMessage(error.message, true);
+        return;
+    }
+
+    await handleAuthSession(data.session);
+
+    supabaseClient.auth.onAuthStateChange((_event, session) => {
+
+        setTimeout(() => {
+            handleAuthSession(session);
+        }, 0);
+
+    });
+
+}
+
+initializeApp();

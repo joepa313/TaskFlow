@@ -1,97 +1,150 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>TaskFlow - Task Manager</title>
-
+    <title>TaskFlow</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <div class="app-container">
-
-        <!-- Sidebar -->
-        <aside class="sidebar">
-
+    <!-- LOGIN SCREEN -->
+    <div id="auth-screen">
+        <div class="auth-container">
             <h1>TaskFlow</h1>
+            <p class="auth-subtitle">Your tasks. Organized.</p>
 
-            <nav>
-                <button class="nav-btn active" data-filter="all">
-                    All Tasks
+            <div class="auth-tabs">
+                <button type="button" id="login-tab" class="active">
+                    Login
                 </button>
 
-                <button class="nav-btn" data-filter="pending">
-                    Pending
+                <button type="button" id="signup-tab">
+                    Create Account
                 </button>
+            </div>
 
-                <button class="nav-btn" data-filter="completed">
-                    Completed
+            <form id="auth-form">
+                <input
+                    type="email"
+                    id="auth-email"
+                    placeholder="Email address"
+                    required
+                >
+
+                <input
+                    type="password"
+                    id="auth-password"
+                    placeholder="Password"
+                    required
+                >
+
+                <button type="submit" id="auth-submit">
+                    Login
                 </button>
-            </nav>
+            </form>
 
-        </aside>
+            <button type="button" id="forgot-password">
+                Forgot password?
+            </button>
 
-
-        <!-- Main Content -->
-        <main class="main-content">
-
-            <!-- Header -->
-            <header>
-                <h2>My Tasks</h2>
-                <p>Stay organized and get things done.</p>
-            </header>
+            <p id="auth-message"></p>
+        </div>
+    </div>
 
 
-            <!-- Dashboard -->
-            <section class="dashboard">
+    <!-- MAIN APPLICATION -->
+    <div id="app" hidden>
 
-                <div class="stat-card">
-                    <h3 id="total-count">0</h3>
-                    <p>Total Tasks</p>
+        <div class="app-container">
+
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+
+                <h1>TaskFlow</h1>
+
+                <nav>
+                    <button class="filter-btn active" data-filter="all">
+                        All Tasks
+                    </button>
+
+                    <button class="filter-btn" data-filter="pending">
+                        Pending
+                    </button>
+
+                    <button class="filter-btn" data-filter="completed">
+                        Completed
+                    </button>
+                </nav>
+
+                <div class="account-section">
+                    <p id="account-email"></p>
+                    <button id="logout-btn">Log Out</button>
                 </div>
 
-                <div class="stat-card">
-                    <h3 id="pending-count">0</h3>
-                    <p>Pending</p>
-                </div>
-
-                <div class="stat-card">
-                    <h3 id="completed-count">0</h3>
-                    <p>Completed</p>
-                </div>
-
-            </section>
+            </aside>
 
 
-            <!-- Add Task Form -->
-            <section class="task-form">
+            <!-- MAIN CONTENT -->
+            <main class="main-content">
 
-                <h3>Add a New Task</h3>
+                <header class="page-header">
+                    <h2>My Dashboard</h2>
+                    <p>Keep track of everything you need to get done.</p>
+                </header>
 
-                <form id="task-form">
 
-                    <input
-                        type="text"
-                        id="task-title"
-                        placeholder="What needs to get done?"
-                        required
-                    >
+                <!-- DASHBOARD STATISTICS -->
+                <section class="dashboard">
 
-                    <input
-                        type="text"
-                        id="task-description"
-                        placeholder="Add a description (optional)"
-                    >
+                    <div class="stat-card">
+                        <h3>Total Tasks</h3>
+                        <p id="total-tasks">0</p>
+                    </div>
 
-                    <div class="form-options">
+                    <div class="stat-card">
+                        <h3>Pending</h3>
+                        <p id="pending-tasks">0</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Completed</h3>
+                        <p id="completed-tasks">0</p>
+                    </div>
+
+                </section>
+
+
+                <!-- ADD TASK -->
+                <section class="add-task-section">
+
+                    <h2>Add a New Task</h2>
+
+                    <form id="task-form">
+
+                        <input
+                            type="text"
+                            id="task-title"
+                            placeholder="Task title"
+                            required
+                        >
+
+                        <input
+                            type="text"
+                            id="task-description"
+                            placeholder="Description"
+                        >
+
+                        <input
+                            type="date"
+                            id="task-date"
+                        >
 
                         <select id="task-priority">
                             <option value="Low">Low Priority</option>
-                            <option value="Medium" selected>Medium Priority</option>
+                            <option value="Medium" selected>
+                                Medium Priority
+                            </option>
                             <option value="High">High Priority</option>
                         </select>
 
@@ -102,182 +155,98 @@
                             <option value="Other">Other</option>
                         </select>
 
-                        <input
-                            type="date"
-                            id="task-date"
-                        >
+                        <button type="submit">Add Task</button>
 
+                    </form>
+
+                </section>
+
+
+                <!-- TASK LIST -->
+                <section class="task-section">
+
+                    <div class="task-heading">
+                        <h2>My Tasks</h2>
+
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder="Search tasks..."
+                        >
                     </div>
 
-                    <button type="submit" class="add-btn">
-                        + Add Task
-                    </button>
+                    <div id="task-list"></div>
 
-                </form>
+                </section>
 
-            </section>
+            </main>
 
-
-            <!-- Task List -->
-            <section class="tasks-section">
-
-                <h3>My Task List</h3>
-
-                <input
-                    type="text"
-                    id="task-search"
-                    placeholder="Search your tasks..."
-                >
-
-                <div id="task-list"></div>
-
-            </section>
-
-        </main>
+        </div>
 
     </div>
 
 
     <!-- EDIT TASK MODAL -->
-    <dialog id="edit-modal" class="edit-modal">
+    <div id="edit-modal" class="modal">
 
-        <div class="modal-header">
-
-            <div>
-                <h2>Edit Task</h2>
-                <p>Update your task details below.</p>
-            </div>
+        <div class="modal-content">
 
             <button
                 type="button"
                 id="close-modal"
-                class="close-modal"
-                aria-label="Close"
+                class="close-btn"
             >
                 &times;
             </button>
 
-        </div>
+            <h2>Edit Task</h2>
 
-
-        <form id="edit-task-form">
-
-            <div class="edit-field">
-
-                <label for="edit-title">Task Name</label>
+            <form id="edit-form">
 
                 <input
                     type="text"
                     id="edit-title"
+                    placeholder="Task title"
                     required
                 >
 
-            </div>
-
-
-            <div class="edit-field">
-
-                <label for="edit-description">Description</label>
-
-                <textarea
+                <input
+                    type="text"
                     id="edit-description"
-                    rows="3"
-                    placeholder="Add a description..."
-                ></textarea>
-
-            </div>
-
-
-            <!-- Priority Selection -->
-            <div class="edit-field">
-
-                <label>Priority</label>
-
-                <div class="selection-group" id="edit-priority">
-
-                    <button type="button" class="choice-btn priority-choice" data-value="High">
-                        High
-                    </button>
-
-                    <button type="button" class="choice-btn priority-choice" data-value="Medium">
-                        Medium
-                    </button>
-
-                    <button type="button" class="choice-btn priority-choice" data-value="Low">
-                        Low
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- Category Selection -->
-            <div class="edit-field">
-
-                <label>Category</label>
-
-                <div class="selection-group" id="edit-category">
-
-                    <button type="button" class="choice-btn category-choice" data-value="Personal">
-                        Personal
-                    </button>
-
-                    <button type="button" class="choice-btn category-choice" data-value="Work">
-                        Work
-                    </button>
-
-                    <button type="button" class="choice-btn category-choice" data-value="School">
-                        School
-                    </button>
-
-                    <button type="button" class="choice-btn category-choice" data-value="Other">
-                        Other
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- Due Date -->
-            <div class="edit-field">
-
-                <label for="edit-date">Due Date</label>
+                    placeholder="Description"
+                >
 
                 <input
                     type="date"
                     id="edit-date"
                 >
 
-            </div>
+                <select id="edit-priority">
+                    <option value="Low">Low Priority</option>
+                    <option value="Medium">Medium Priority</option>
+                    <option value="High">High Priority</option>
+                </select>
+
+                <select id="edit-category">
+                    <option value="Personal">Personal</option>
+                    <option value="Work">Work</option>
+                    <option value="School">School</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <button type="submit">Save Changes</button>
+
+            </form>
+
+        </div>
+
+    </div>
 
 
-            <!-- Modal Buttons -->
-            <div class="modal-actions">
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-                <button
-                    type="button"
-                    id="cancel-edit"
-                    class="cancel-btn"
-                >
-                    Cancel
-                </button>
-
-                <button
-                    type="submit"
-                    class="save-btn"
-                >
-                    Save Changes
-                </button>
-
-            </div>
-
-        </form>
-
-    </dialog>
-
-
+    <!-- APPLICATION JAVASCRIPT -->
     <script src="script.js"></script>
 
 </body>
